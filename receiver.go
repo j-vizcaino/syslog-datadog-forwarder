@@ -38,7 +38,8 @@ func (r *Receiver) ReceiveMessages(out chan <- *rfc3164.SyslogMessage) {
 			msg.Timestamp = &now
 		} else if msg.Timestamp.Year() == 0 {
 			// Fix missing year from timestamp
-			msg.Timestamp.AddDate(now.Year(), 0, 0)
+			fixedTS := msg.Timestamp.AddDate(now.Year(), 0, 0)
+			msg.Timestamp = &fixedTS
 		}
 		out <- msg
 	}

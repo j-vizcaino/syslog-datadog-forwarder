@@ -44,17 +44,15 @@ func (p *Publisher) Run(ctx context.Context) {
 }
 
 func (p *Publisher) publishNow(ctx context.Context, msg *datadog.LogContent) {
-	payload := bytes.Buffer{}
-	encoder := json.NewEncoder(&payload)
-	err := encoder.Encode(msg)
+	payload, err := json.Marshal(msg)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", p.targetURL, &payload)
+	req, err := http.NewRequestWithContext(ctx, "POST", p.targetURL, bytes.NewBuffer(payload))
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -62,12 +60,13 @@ func (p *Publisher) publishNow(ctx context.Context, msg *datadog.LogContent) {
 
 	res, err := p.client.Do(req)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		fmt.Print(res)
+		fmt.Println(res)
 		return
 	}
 }
